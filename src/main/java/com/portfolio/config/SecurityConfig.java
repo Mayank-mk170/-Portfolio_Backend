@@ -17,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
@@ -25,12 +24,10 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -38,10 +35,13 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
+                // Disable CSRF because this is a stateless JWT API
                 .csrf(csrf -> csrf.disable())
 
+                // Enable CORS
                 .cors(cors -> {})
 
+                // JWT authentication = stateless
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
@@ -51,14 +51,23 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // ========================================
+                        // CORS PREFLIGHT
+                        // ========================================
+
+                        .requestMatchers(
+                                HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+
+                        // ========================================
                         // AUTH
                         // ========================================
 
                         .requestMatchers(
+                                HttpMethod.POST,
                                 "/api/auth/register",
                                 "/api/auth/login"
                         ).permitAll()
-
 
                         // ========================================
                         // CONTACT - PUBLIC SUBMIT
@@ -68,7 +77,6 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/api/contact"
                         ).permitAll()
-
 
                         // ========================================
                         // CONTACT - ADMIN READ
@@ -80,7 +88,6 @@ public class SecurityConfig {
                                 "/api/contact/**"
                         ).hasRole("ADMIN")
 
-
                         // ========================================
                         // CONTACT - ADMIN DELETE
                         // ========================================
@@ -89,7 +96,6 @@ public class SecurityConfig {
                                 HttpMethod.DELETE,
                                 "/api/contact/**"
                         ).hasRole("ADMIN")
-
 
                         // ========================================
                         // PUBLIC GET
@@ -121,7 +127,6 @@ public class SecurityConfig {
                                 "/api/user-profile"
                         ).permitAll()
 
-
                         // ========================================
                         // ADMIN - CREATE
                         // ========================================
@@ -140,7 +145,6 @@ public class SecurityConfig {
                                 "/api/user-profile"
                         ).hasRole("ADMIN")
 
-
                         // ========================================
                         // ADMIN - UPDATE
                         // ========================================
@@ -157,7 +161,6 @@ public class SecurityConfig {
                                 "/api/services/**"
                         ).hasRole("ADMIN")
 
-
                         // ========================================
                         // ADMIN - DELETE
                         // ========================================
@@ -173,7 +176,6 @@ public class SecurityConfig {
                                 "/api/testimonials/**",
                                 "/api/services/**"
                         ).hasRole("ADMIN")
-
 
                         // ========================================
                         // EVERYTHING ELSE
